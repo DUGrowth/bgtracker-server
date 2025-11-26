@@ -93,6 +93,42 @@ app.get('/percentage.svg', async (req, res) => {
     }
 });
 
+// Endpoint for countdown
+app.get('/countdown.svg', async (req, res) => {
+    try {
+        const targetDate = new Date('2025-12-09T12:00:00Z');
+        const now = new Date();
+        const timeDiff = targetDate - now;
+
+        if (timeDiff <= 0) {
+            const svg = `
+<svg width="250" height="60" xmlns="http://www.w3.org/2000/svg">
+  <text x="125" y="30" font-family="'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="bold" fill="#0f9dde" text-anchor="middle">Campaign Ended</text>
+</svg>`;
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Cache-Control', 'public, max-age=300');
+            res.send(svg);
+            return;
+        }
+
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+        const svg = `
+<svg width="250" height="60" xmlns="http://www.w3.org/2000/svg">
+  <text x="5" y="20" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="bold" fill="#0f9dde">Ends in:</text>
+  <text x="5" y="50" font-family="'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="bold" fill="#0f9dde">${days}d ${hours}h ${minutes}m</text>
+</svg>`;
+
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=60'); // Cache for 1 minute since it updates frequently
+        res.send(svg);
+    } catch (error) {
+        res.status(500).send('Error');
+    }
+});
+
 app.get('/progress.svg', async (req, res) => {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
