@@ -17,6 +17,82 @@ app.get('/test', async (req, res) => {
     }
 });
 
+// Helper function to format currency
+const formatMoney = (amount) => {
+    return new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
+};
+
+// Endpoint for amount raised text
+app.get('/amount.svg', async (req, res) => {
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await response.json();
+        const raised = data.amountRaised || 0;
+        const target = data.target || 1;
+
+        const svg = `
+<svg width="300" height="40" xmlns="http://www.w3.org/2000/svg">
+  <text x="0" y="30" font-family="'Helvetica Neue', Arial, sans-serif" font-size="32" font-weight="bold" fill="#0f9dde">${formatMoney(raised)}</text>
+  <text x="150" y="30" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#888"> of ${formatMoney(target)}</text>
+</svg>`;
+
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.send(svg);
+    } catch (error) {
+        res.status(500).send('Error');
+    }
+});
+
+// Endpoint for donor count
+app.get('/donors.svg', async (req, res) => {
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await response.json();
+        const donors = data.donationCount || 0;
+
+        const svg = `
+<svg width="100" height="50" xmlns="http://www.w3.org/2000/svg">
+  <text x="50" y="25" font-family="'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="bold" fill="#333" text-anchor="middle">${donors}</text>
+  <text x="50" y="45" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#555" text-anchor="middle">Supporters</text>
+</svg>`;
+
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.send(svg);
+    } catch (error) {
+        res.status(500).send('Error');
+    }
+});
+
+// Endpoint for percentage
+app.get('/percentage.svg', async (req, res) => {
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await response.json();
+        const raised = data.amountRaised || 0;
+        const target = data.target || 1;
+        const percent = Math.round((raised / target) * 100);
+
+        const svg = `
+<svg width="100" height="50" xmlns="http://www.w3.org/2000/svg">
+  <text x="50" y="25" font-family="'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="bold" fill="#333" text-anchor="middle">${percent}%</text>
+  <text x="50" y="45" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#555" text-anchor="middle">Funded</text>
+</svg>`;
+
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.send(svg);
+    } catch (error) {
+        res.status(500).send('Error');
+    }
+});
+
 app.get('/progress.svg', async (req, res) => {
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
