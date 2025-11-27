@@ -105,6 +105,15 @@ function renderProgressImage(data) {
     ctx.font = 'bold 22px Arial';
     ctx.fillText('Appeal Progress', padding, padding + 10);
 
+    // Countdown (top right)
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#0f9dde';
+    ctx.font = 'bold 22px Arial';
+    ctx.fillText('Ends in', width - padding, padding + 10);
+    ctx.font = 'bold 28px Arial';
+    ctx.fillText(getCountdownText(), width - padding, padding + 38);
+    ctx.textAlign = 'left';
+
     // Amounts
     ctx.fillStyle = '#333333';
     ctx.font = 'bold 28px Arial';
@@ -152,15 +161,6 @@ function renderProgressImage(data) {
     ctx.font = '14px Arial';
     ctx.fillText('Supporters', padding, barY + barHeight + 62);
     ctx.fillText('Funded', padding + 140, barY + barHeight + 62);
-
-    // Countdown
-    ctx.fillStyle = '#0f9dde';
-    ctx.font = 'bold 13px Arial';
-    ctx.fillText('Ends in', width - padding - 100, barY + barHeight + 24);
-
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 20px Arial';
-    ctx.fillText(getCountdownText(), width - padding - 140, barY + barHeight + 48);
 
     return canvas.toBuffer('image/png');
 }
