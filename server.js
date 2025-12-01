@@ -67,7 +67,7 @@ const getCountdownText = () => {
     return `${days}d ${hours}h ${minutes}m`;
 };
 
-function renderProgressImage(data) {
+async function renderProgressImage(data) {
     const drawRoundedRect = (ctx, x, y, w, h, r) => {
         const radius = Math.min(r, w / 2, h / 2);
         ctx.beginPath();
@@ -180,7 +180,9 @@ function renderProgressImage(data) {
     ctx.fillText('Supporters', padding, statsY + 28);
     ctx.fillText('Funded', padding + 240, statsY + 28);
 
-    return canvas.toBuffer('png');
+    // skia-canvas returns a Promise for toBuffer; node-canvas returns a Buffer.
+    const pngBuffer = await canvas.toBuffer('png');
+    return Buffer.isBuffer(pngBuffer) ? pngBuffer : Buffer.from(pngBuffer);
 }
 
 // HTML page with embedded SVG (works in all email clients as a link)
@@ -247,7 +249,7 @@ app.get('/', (req, res) => {
 app.get('/progress.png', async (req, res) => {
     try {
         const data = await getDonationData();
-        const imageBuffer = renderProgressImage(data);
+        const imageBuffer = await renderProgressImage(data);
         const safeBuffer = (Buffer.isBuffer(imageBuffer) && imageBuffer.length > 100)
             ? imageBuffer
             : PLACEHOLDER_PNG;
