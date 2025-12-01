@@ -116,7 +116,7 @@ async function renderProgressImage(data) {
     const height = 360;
     const padding = 36;
     const barHeight = 44;
-    const countdownBox = { width: 190, height: 80, radius: 14 };
+    const countdownBox = { width: 0, height: 0, radius: 0 }; // not used now
 
     const raised = Number(data.amountRaised) || 0;
     const target = Number(data.target) > 0 ? Number(data.target) : 1;
@@ -132,22 +132,7 @@ async function renderProgressImage(data) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    // Countdown tile (top right)
-    const cdX = width - padding - countdownBox.width;
-    const cdY = padding;
-    ctx.fillStyle = '#e8f7ff';
-    drawRoundedRect(ctx, cdX, cdY, countdownBox.width, countdownBox.height, countdownBox.radius);
-    ctx.fill();
-
-    ctx.fillStyle = '#0f9dde';
-    ctx.font = 'bold 20px Arial';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText('Ends in', cdX + 16, cdY + 28);
-
-    ctx.font = 'bold 34px Arial';
-    ctx.fillText(getCountdownText(), cdX + 16, cdY + 62);
-
-    // Amounts (moved up now that heading text is removed)
+    // Amounts (aligned to top without countdown tile)
     ctx.fillStyle = '#111111';
     ctx.font = 'bold 64px Arial';
     ctx.fillText(formatMoney(raised), padding, padding + 64);
