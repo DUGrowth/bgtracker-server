@@ -5,6 +5,12 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// 1x1 transparent PNG used as a safety net if rendering fails (avoids broken image icons in email clients)
+const PLACEHOLDER_PNG = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=',
+    'base64'
+);
+
 // Configuration
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7qV8JF2xl5hKRbTarv2nq0tn7TD8HqnAKYikZz6JPrydKzjVwh2I7ohvRf_kcytOR0A/exec';
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -242,12 +248,22 @@ app.get('/progress.png', async (req, res) => {
     try {
         const data = await getDonationData();
         const imageBuffer = renderProgressImage(data);
+        const safeBuffer = (Buffer.isBuffer(imageBuffer) && imageBuffer.length > 100)
+            ? imageBuffer
+            : PLACEHOLDER_PNG;
+
+        if (safeBuffer === PLACEHOLDER_PNG) {
+            console.error('Progress image generation returned an invalid buffer; served placeholder PNG instead.');
+        }
+
         res.setHeader('Content-Type', 'image/png');
         res.setHeader('Cache-Control', 'no-cache');
-        res.send(imageBuffer);
+        res.send(safeBuffer);
     } catch (error) {
         console.error('Error generating progress image:', error);
-        res.status(500).send('Error generating image');
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.status(503).send(PLACEHOLDER_PNG);
     }
 });
 
