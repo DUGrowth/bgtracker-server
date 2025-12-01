@@ -25,11 +25,39 @@ async function getDonationData() {
 
     try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-        cache.data = data;
-        cache.timestamp = now;
-        return data;
+        const contentType = (response.headers.get('content-type') || '').toLowerCase();
+
+        // Case 1: JSON API
+        if (contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            cache.data = data;
+            cache.timestamp = now;
+            return data;
+        }
+
+        // Case 2: HTML page with embedded state (Big Give campaign page)
+        if (contentType.includes('text/html')) {
+            const html = await response.text();
+            const stateMatch = html.match(/<script id="ng-state"[^>]*>([\s\S]*?)<\/script>/i);
+            if (stateMatch && stateMatch[1]) {
+                const stateJson = JSON.parse(stateMatch[1]);
+                const campaignKey = Object.keys(stateJson).find((k) => k.startsWith('campaign-'));
+                const campaignData = campaignKey ? stateJson[campaignKey] : null;
+                if (campaignData) {
+                    const parsed = {
+                        amountRaised: Number(campaignData.amountRaised) || 0,
+                        target: Number(campaignData.target) || 1,
+                        donationCount: Number(campaignData.donationCount) || 0,
+                    };
+                    cache.data = parsed;
+                    cache.timestamp = now;
+                    return parsed;
+                }
+            }
+        }
+
+        throw new Error('Unsupported response type or missing data');
     } catch (error) {
         console.error('Error fetching data:', error);
         return cache.data || { amountRaised: 0, target: 100000, donationCount: 0 };
