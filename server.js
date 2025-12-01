@@ -12,7 +12,7 @@ const PLACEHOLDER_PNG = Buffer.from(
 );
 
 // Configuration
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7qV8JF2xl5hKRbTarv2nq0tn7TD8HqnAKYikZz6JPrydKzjVwh2I7ohvRf_kcytOR0A/exec';
+const GOOGLE_SCRIPT_URL = 'https://donate.biggive.org/campaign/a05WS000005A3MjYAK';
 const CACHE_DURATION = 5 * 60 * 1000;
 
 let cache = { data: null, timestamp: 0 };
