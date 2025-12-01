@@ -259,12 +259,17 @@ app.get('/progress.png', async (req, res) => {
         }
 
         res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Cache-Control', 'no-cache');
+        // Force clients to revalidate on every request; some email clients cache aggressively.
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         res.send(safeBuffer);
     } catch (error) {
         console.error('Error generating progress image:', error);
         res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         res.status(503).send(PLACEHOLDER_PNG);
     }
 });
