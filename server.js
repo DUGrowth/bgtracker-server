@@ -77,16 +77,19 @@ function renderProgressImage(data) {
         ctx.closePath();
     };
 
-    const width = 520;
-    const height = 220;
-    const padding = 22;
-    const barHeight = 28;
+    // Draw at 2x the target email width (280px) for crispness
+    const width = 560;
+    const height = 360;
+    const padding = 36;
+    const barHeight = 44;
+    const countdownBox = { width: 190, height: 80, radius: 14 };
 
     const raised = Number(data.amountRaised) || 0;
     const target = Number(data.target) > 0 ? Number(data.target) : 1;
     const donors = Number(data.donationCount) || 0;
-    const percent = Math.round((raised / target) * 100);
-    const fillPercent = Math.min(raised / target, 1);
+    const rawPercent = (raised / target) * 100;
+    const percent = Math.round(rawPercent);
+    const fillPercent = Math.min(Math.max(raised / target, 0), 1);
 
     const canvas = new Canvas(width, height);
     const ctx = canvas.getContext('2d');
@@ -100,67 +103,76 @@ function renderProgressImage(data) {
     ctx.lineWidth = 1;
     ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
 
+    // Countdown tile (top right)
+    const cdX = width - padding - countdownBox.width;
+    const cdY = padding;
+    ctx.fillStyle = '#e8f7ff';
+    drawRoundedRect(ctx, cdX, cdY, countdownBox.width, countdownBox.height, countdownBox.radius);
+    ctx.fill();
+
+    ctx.fillStyle = '#0f9dde';
+    ctx.font = 'bold 20px Arial';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('Ends in', cdX + 16, cdY + 28);
+
+    ctx.font = 'bold 34px Arial';
+    ctx.fillText(getCountdownText(), cdX + 16, cdY + 62);
+
     // Heading
     ctx.fillStyle = '#0f9dde';
-    ctx.font = 'bold 22px Arial';
-    ctx.fillText('Appeal Progress', padding, padding + 10);
-
-    // Countdown (top right)
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#0f9dde';
-    ctx.font = 'bold 22px Arial';
-    ctx.fillText('Ends in', width - padding, padding + 10);
-    ctx.font = 'bold 28px Arial';
-    ctx.fillText(getCountdownText(), width - padding, padding + 38);
-    ctx.textAlign = 'left';
+    ctx.font = 'bold 32px Arial';
+    ctx.fillText('Appeal Progress', padding, padding + 24);
 
     // Amounts
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 28px Arial';
-    ctx.fillText(formatMoney(raised), padding, padding + 52);
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 64px Arial';
+    ctx.fillText(formatMoney(raised), padding, padding + 92);
 
-    ctx.fillStyle = '#666666';
-    ctx.font = '16px Arial';
-    ctx.fillText(`of ${formatMoney(target)} goal`, padding, padding + 74);
+    ctx.fillStyle = '#555555';
+    ctx.font = '24px Arial';
+    ctx.fillText(`of ${formatMoney(target)} goal`, padding, padding + 122);
 
     // Progress bar background
     const barWidth = width - padding * 2;
-    const barY = padding + 96;
+    const barY = padding + 154;
     ctx.fillStyle = '#e0e0e0';
-    drawRoundedRect(ctx, padding, barY, barWidth, barHeight, 14);
+    drawRoundedRect(ctx, padding, barY, barWidth, barHeight, 16);
     ctx.fill(); // background bar
 
     // Progress bar fill
-    const fillWidth = Math.max(barHeight, barWidth * fillPercent);
+    const minFill = 14;
+    const fillWidth = Math.max(minFill, barWidth * fillPercent);
     ctx.fillStyle = percent >= 100 ? '#00b7ff' : '#0f9dde';
-    drawRoundedRect(ctx, padding, barY, fillWidth, barHeight, 14);
+    drawRoundedRect(ctx, padding, barY, fillWidth, barHeight, 16);
     ctx.fill(); // filled portion
 
     // Percentage text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px Arial';
-    const percentText = `${Math.max(percent, 0)}%`;
+    ctx.font = 'bold 26px Arial';
+    const percentText = `${Math.max(0, Math.min(percent, 999))}%`;
     const percentTextWidth = ctx.measureText(percentText).width;
-    const percentX = Math.min(padding + fillWidth - percentTextWidth - 8, padding + barWidth - percentTextWidth - 8);
-    const percentY = barY + barHeight - 8;
-    if (fillWidth > percentTextWidth + 16) {
-        ctx.fillText(percentText, Math.max(padding + 8, percentX), percentY);
+    if (fillWidth >= percentTextWidth + 24) {
+        ctx.fillStyle = '#ffffff';
+        ctx.textBaseline = 'middle';
+        const textX = padding + Math.min(fillWidth - percentTextWidth - 12, barWidth - percentTextWidth - 12);
+        ctx.fillText(percentText, textX, barY + barHeight / 2);
     } else {
-        // If bar too small, draw above the bar
         ctx.fillStyle = '#0f9dde';
-        ctx.fillText(percentText, padding, barY - 8);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(percentText, padding, barY - 10);
     }
+    ctx.textBaseline = 'alphabetic';
 
     // Meta stats
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText(`${donors}`, padding, barY + barHeight + 40);
-    ctx.fillText(`${Math.max(percent, 0)}%`, padding + 140, barY + barHeight + 40);
+    const statsY = barY + barHeight + 52;
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 42px Arial';
+    ctx.fillText(donors.toLocaleString('en-GB'), padding, statsY);
+    ctx.fillText(`${Math.max(percent, 0)}%`, padding + 240, statsY);
 
-    ctx.fillStyle = '#666666';
-    ctx.font = '14px Arial';
-    ctx.fillText('Supporters', padding, barY + barHeight + 62);
-    ctx.fillText('Funded', padding + 140, barY + barHeight + 62);
+    ctx.fillStyle = '#555555';
+    ctx.font = '20px Arial';
+    ctx.fillText('Supporters', padding, statsY + 28);
+    ctx.fillText('Funded', padding + 240, statsY + 28);
 
     return canvas.toBuffer('png');
 }
