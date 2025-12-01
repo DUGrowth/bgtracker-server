@@ -104,11 +104,6 @@ async function renderProgressImage(data) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    // Border
-    ctx.strokeStyle = '#e6e6e6';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
-
     // Countdown tile (top right)
     const cdX = width - padding - countdownBox.width;
     const cdY = padding;
@@ -124,23 +119,18 @@ async function renderProgressImage(data) {
     ctx.font = 'bold 34px Arial';
     ctx.fillText(getCountdownText(), cdX + 16, cdY + 62);
 
-    // Heading
-    ctx.fillStyle = '#0f9dde';
-    ctx.font = 'bold 32px Arial';
-    ctx.fillText('Appeal Progress', padding, padding + 24);
-
-    // Amounts
+    // Amounts (moved up now that heading text is removed)
     ctx.fillStyle = '#111111';
     ctx.font = 'bold 64px Arial';
-    ctx.fillText(formatMoney(raised), padding, padding + 92);
+    ctx.fillText(formatMoney(raised), padding, padding + 64);
 
     ctx.fillStyle = '#555555';
     ctx.font = '24px Arial';
-    ctx.fillText(`of ${formatMoney(target)} goal`, padding, padding + 122);
+    ctx.fillText(`of ${formatMoney(target)} goal`, padding, padding + 96);
 
     // Progress bar background
     const barWidth = width - padding * 2;
-    const barY = padding + 154;
+    const barY = padding + 130;
     ctx.fillStyle = '#e0e0e0';
     drawRoundedRect(ctx, padding, barY, barWidth, barHeight, 16);
     ctx.fill(); // background bar
